@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 import type { Execution } from "@/types/types";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
@@ -221,30 +222,33 @@ function Sidebar({ isOpen, execution, action, onClose }: SidebarProps) {
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            Close
+            <X />
           </button>
         </div>
 
-        {/* Summary Section */}
-        <div className="mt-4">
-          <h3 className="text-xl font-semibold">Summary</h3>
-          <p className="mt-3 whitespace-pre-wrap border rounded-lg p-4">
-            {execution.summary || "No summary available"}
-          </p>
-        </div>
-
         {action === "transcript" && (
-          <div className="mt-6">
-            <h3 className="text-xl font-semibold">Transcript</h3>
-            <p className="mt-2 whitespace-pre-wrap">
-              {execution.transcript || "No transcript available"}
-            </p>
-          </div>
+          <>
+            {/* Summary and Transcript for transcript action */}
+            <div className="mt-4">
+              <h3 className="text-xl font-semibold">Summary</h3>
+              <p className="mt-3 whitespace-pre-wrap border rounded-lg p-4">
+                {execution.summary || "No summary available"}
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold">Transcript</h3>
+              <p className="mt-2 whitespace-pre-wrap border rounded-lg p-4">
+                {execution.transcript || "No transcript available"}
+              </p>
+            </div>
+          </>
         )}
 
         {action === "recording" && (
-          <div className="mt-6">
-            <h3 className="text-xl font-semibold">Recording</h3>
+          // Only the recording is shown for recording action.
+          <div className="mt-6 border rounded-lg p-4">
+            <h3 className="text-xl font-semibold ">Recording</h3>
             {execution.telephony_data?.recording_url ? (
               <>
                 <audio
@@ -264,16 +268,6 @@ function Sidebar({ isOpen, execution, action, onClose }: SidebarProps) {
               </>
             ) : (
               <p>No recording available</p>
-            )}
-
-            {/* Optionally show transcript along with recording */}
-            {execution.transcript && (
-              <div className="mt-6">
-                <h3 className="text-xl font-semibold">Transcript</h3>
-                <p className="mt-2 whitespace-pre-wrap">
-                  {execution.transcript}
-                </p>
-              </div>
             )}
           </div>
         )}
