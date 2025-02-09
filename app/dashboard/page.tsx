@@ -10,12 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { X } from "lucide-react";
 import type { Execution } from "@/types/types";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
+const ITEMS_PER_PAGE = 10;
 
 type SidebarAction = "transcript" | "recording";
 
@@ -23,6 +25,7 @@ export default function ExecutionsDashboard() {
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // State for the sidebar
   const [selectedExecution, setSelectedExecution] = useState<Execution | null>(
@@ -31,6 +34,12 @@ export default function ExecutionsDashboard() {
   const [selectedAction, setSelectedAction] = useState<SidebarAction | null>(
     null
   );
+
+  // Calculate pagination values
+  const totalPages = Math.ceil(executions.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentExecutions = executions.slice(startIndex, endIndex);
 
   useEffect(() => {
     const fetchExecutions = async () => {
@@ -64,7 +73,15 @@ export default function ExecutionsDashboard() {
   }, []);
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
   };
 
   const formatDuration = (seconds: number): string => {
@@ -100,6 +117,63 @@ export default function ExecutionsDashboard() {
     setSelectedAction(null);
   };
 
+  const exportToCSV = () => {
+    // Format current date and time for filename
+    const now = new Date();
+    const dateString = now
+      .toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\//g, "-");
+
+    const timeString = now
+      .toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(/:/g, "-");
+
+    const filename = `${dateString}_${timeString}.csv`;
+
+    // Prepare data for CSV
+    const headers = [
+      "Execution ID",
+      "Type",
+      "Duration",
+      "Timestamp",
+      "Cost",
+      "Status",
+    ];
+
+    const csvData = executions.map((execution) => [
+      execution.id,
+      execution.telephony_data?.call_type || "N/A",
+      formatDuration(execution.conversation_duration),
+      formatDate(execution.created_at),
+      formatCost(execution.total_cost / 100),
+      execution.status,
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map((row) => row.join(",")),
+    ].join("\n");
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -120,8 +194,16 @@ export default function ExecutionsDashboard() {
     <div className="relative">
       <div className="container mx-auto p-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Execution Dashboard</CardTitle>
+            <Button
+              onClick={exportToCSV}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </Button>
           </CardHeader>
           <CardContent>
             <Table>
@@ -137,7 +219,7 @@ export default function ExecutionsDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {executions.map((execution) => (
+                {currentExecutions.map((execution) => (
                   <TableRow key={execution.id}>
                     <TableCell className="font-mono text-sm">
                       {execution.id.substring(0, 8)}...
@@ -184,6 +266,40 @@ export default function ExecutionsDashboard() {
                 ))}
               </TableBody>
             </Table>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-500">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, executions.length)} of {executions.length}{" "}
+                entries
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -201,6 +317,7 @@ export default function ExecutionsDashboard() {
   );
 }
 
+// Sidebar component remains unchanged
 interface SidebarProps {
   isOpen: boolean;
   execution: Execution;
@@ -228,7 +345,6 @@ function Sidebar({ isOpen, execution, action, onClose }: SidebarProps) {
 
         {action === "transcript" && (
           <>
-            {/* Summary and Transcript for transcript action */}
             <div className="mt-4">
               <h3 className="text-xl font-semibold">Summary</h3>
               <p className="mt-3 whitespace-pre-wrap border rounded-lg p-4">
@@ -246,9 +362,8 @@ function Sidebar({ isOpen, execution, action, onClose }: SidebarProps) {
         )}
 
         {action === "recording" && (
-          // Only the recording is shown for recording action.
           <div className="mt-6 border rounded-lg p-4">
-            <h3 className="text-xl font-semibold ">Recording</h3>
+            <h3 className="text-xl font-semibold">Recording</h3>
             {execution.telephony_data?.recording_url ? (
               <>
                 <audio
