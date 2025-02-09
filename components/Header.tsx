@@ -21,11 +21,6 @@ export default function Header() {
               <Link href="/dashboard/outbound">Outbound Calls</Link>
             </Button>
           </li>
-          <li>
-            <Button variant="ghost" asChild>
-              <Link href="/dashboard/create-agent">Create Agent</Link>
-            </Button>
-          </li>
         </ul>
       </nav>
     </header>
