@@ -21,7 +21,7 @@ export default function Home() {
             size="lg"
             className="bg-white text-blue-600 hover:bg-blue-50"
           >
-            <Link href="/dashboard">Get Started Free</Link>
+            <Link href="/dashboard">Sign In</Link>
           </Button>
         </div>
       </section>
