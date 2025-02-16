@@ -5,6 +5,9 @@ export interface CostBreakdown {
   synthesizer: number;
   transcriber: number;
 }
+export interface OrderDetails {
+  order_details: string;
+}
 
 export interface TelephonyData {
   duration: string;
@@ -38,7 +41,7 @@ export interface Execution {
   total_cost: number;
   transcript: string | null;
   cost_breakdown: CostBreakdown;
-  extracted_data: unknown | null;
+  extracted_data: OrderDetails | null;
   summary: string | null;
   error_message: string | null;
   status: "completed" | "busy" | "error";

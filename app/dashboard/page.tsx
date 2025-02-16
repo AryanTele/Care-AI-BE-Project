@@ -352,6 +352,14 @@ function Sidebar({ isOpen, execution, action, onClose }: SidebarProps) {
 
         {action === "transcript" && (
           <>
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold">Order Details</h3>
+              <p className="mt-2 whitespace-pre-wrap border rounded-lg p-4">
+                {execution.extracted_data?.order_details ||
+                  "No order details available"}
+              </p>
+            </div>
+
             <div className="mt-4">
               <h3 className="text-xl font-semibold">Summary</h3>
               <p className="mt-3 whitespace-pre-wrap border rounded-lg p-4">
