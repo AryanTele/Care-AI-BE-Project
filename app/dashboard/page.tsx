@@ -142,6 +142,7 @@ export default function ExecutionsDashboard() {
     // Prepare data for CSV
     const headers = [
       "Execution ID",
+      "Customer Number",
       "Type",
       "Duration",
       "Timestamp",
@@ -210,6 +211,7 @@ export default function ExecutionsDashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">Execution ID</TableHead>
+                  <TableHead>Customer Number</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Timestamp</TableHead>
@@ -223,6 +225,11 @@ export default function ExecutionsDashboard() {
                   <TableRow key={execution.id}>
                     <TableCell className="font-mono text-sm">
                       {execution.id.substring(0, 8)}...
+                    </TableCell>
+                    <TableCell>
+                      {(execution.telephony_data?.call_type == "outbound"
+                        ? execution.telephony_data?.to_number
+                        : execution.telephony_data?.from_number) || "N/A"}
                     </TableCell>
                     <TableCell>
                       {execution.telephony_data?.call_type || "N/A"}
