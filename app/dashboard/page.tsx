@@ -11,9 +11,26 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, ChevronLeft, ChevronRight } from "lucide-react";
-import { X } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  X,
+} from "lucide-react";
 import type { Execution } from "@/types/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -26,6 +43,14 @@ export default function ExecutionsDashboard() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // State for customization
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyTitle, setCompanyTitle] = useState<string>(
+    "Execution Dashboard"
+  );
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [tempTitle, setTempTitle] = useState<string>("");
 
   // State for the sidebar
   const [selectedExecution, setSelectedExecution] = useState<Execution | null>(
@@ -42,6 +67,13 @@ export default function ExecutionsDashboard() {
   const currentExecutions = executions.slice(startIndex, endIndex);
 
   useEffect(() => {
+    // Load saved customization from localStorage
+    const savedLogo = localStorage.getItem("dashboardLogo");
+    const savedTitle = localStorage.getItem("dashboardTitle");
+
+    if (savedLogo) setCompanyLogo(savedLogo);
+    if (savedTitle) setCompanyTitle(savedTitle);
+
     const fetchExecutions = async () => {
       const options = {
         method: "GET",
@@ -71,6 +103,31 @@ export default function ExecutionsDashboard() {
 
     fetchExecutions();
   }, []);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+
+      // Preview the image
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === "string") {
+          setCompanyLogo(event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const saveCustomization = () => {
+    // Save the current logo and title to localStorage
+    if (companyLogo) localStorage.setItem("dashboardLogo", companyLogo);
+    if (tempTitle) {
+      setCompanyTitle(tempTitle);
+      localStorage.setItem("dashboardTitle", tempTitle);
+    }
+  };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString("en-IN", {
@@ -175,6 +232,7 @@ export default function ExecutionsDashboard() {
     link.click();
     document.body.removeChild(link);
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -194,9 +252,79 @@ export default function ExecutionsDashboard() {
   return (
     <div className="relative">
       <div className="container mx-auto p-6">
+        {/* Header with Logo */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {companyLogo && (
+              <div className="w-12 h-12 overflow-hidden rounded">
+                <img
+                  src={companyLogo}
+                  alt="Company Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+            <h1 className="text-2xl font-bold">
+              {companyTitle || "Care AI Dashboard"}
+            </h1>
+          </div>
+
+          {/* Customize Dashboard Dialog */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Customize Dashboard
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Customize Dashboard</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="logo">Company Logo</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="flex-1"
+                    />
+                    {companyLogo && (
+                      <div className="w-12 h-12 border rounded overflow-hidden">
+                        <img
+                          src={companyLogo}
+                          alt="Logo Preview"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Company Title</Label>
+                  <Input
+                    id="title"
+                    placeholder={companyTitle}
+                    defaultValue={companyTitle}
+                    onChange={(e) => setTempTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button onClick={saveCustomization}>Save Changes</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Execution Dashboard</CardTitle>
+            <CardTitle>Execution Records</CardTitle>
             <Button
               onClick={exportToCSV}
               className="flex items-center gap-2"

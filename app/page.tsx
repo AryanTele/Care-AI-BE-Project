@@ -16,13 +16,13 @@ export default function Home() {
             Harness the power of artificial intelligence to provide exceptional
             customer experiences through intelligent call management.
           </p>
-          <Button
+          {/* <Button
             asChild
             size="lg"
             className="bg-white text-blue-600 hover:bg-blue-50"
           >
             <Link href="/dashboard">Sign In</Link>
-          </Button>
+          </Button> */}
         </div>
       </section>
 
