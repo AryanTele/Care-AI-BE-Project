@@ -49,7 +49,7 @@ export default function ExecutionsDashboard() {
   const [companyTitle, setCompanyTitle] = useState<string>(
     "Execution Dashboard"
   );
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [, setLogoFile] = useState<File | null>(null);
   const [tempTitle, setTempTitle] = useState<string>("");
 
   // State for the sidebar
