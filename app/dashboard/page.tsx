@@ -31,6 +31,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+import { 
+  BarChart3, 
+  Phone, 
+  Clock, 
+  DollarSign, 
+  Activity 
+} from "lucide-react";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
@@ -152,11 +160,11 @@ export default function ExecutionsDashboard() {
 
   const getStatusColor = (status: Execution["status"]): string => {
     const statusColors: Record<Execution["status"], string> = {
-      completed: "bg-green-500",
-      busy: "bg-yellow-500",
-      error: "bg-red-500",
+      completed: "bg-emerald-500 hover:bg-emerald-600",
+      busy: "bg-amber-500 hover:bg-amber-600",
+      error: "bg-rose-500 hover:bg-rose-600",
     };
-    return statusColors[status] || "bg-gray-500";
+    return statusColors[status] || "bg-gray-500 hover:bg-gray-600";
   };
 
   const handleTranscriptClick = (execution: Execution) => {
@@ -250,199 +258,236 @@ export default function ExecutionsDashboard() {
   }
 
   return (
-    <div className="relative">
-      <div className="container mx-auto p-6">
-        {/* Header with Logo */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      {/* Header Section */}
+      <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-4">
             {companyLogo && (
-              <div className="w-12 h-12 overflow-hidden rounded">
-                <img
-                  src={companyLogo}
-                  alt="Company Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <img src={companyLogo} alt="Company Logo" className="h-12 w-12 rounded-lg object-cover ring-2 ring-gray-200" />
             )}
-            <h1 className="text-2xl font-bold">
-              {companyTitle || "Care AI Dashboard"}
+            <h1 className="text-3xl font-bold text-gray-900">
+              {companyTitle}
             </h1>
           </div>
-
-          {/* Customize Dashboard Dialog */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Customize Dashboard
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Customize Dashboard</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="logo">Company Logo</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="logo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="flex-1"
-                    />
-                    {companyLogo && (
-                      <div className="w-12 h-12 border rounded overflow-hidden">
-                        <img
-                          src={companyLogo}
-                          alt="Logo Preview"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Company Title</Label>
-                  <Input
-                    id="title"
-                    placeholder={companyTitle}
-                    defaultValue={companyTitle}
-                    onChange={(e) => setTempTitle(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button onClick={saveCustomization}>Save Changes</Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Execution Records</CardTitle>
+          <div className="flex items-center space-x-4">
             <Button
               onClick={exportToCSV}
-              className="flex items-center gap-2"
-              variant="outline"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm"
             >
-              <Download className="w-4 h-4" />
+              <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-50">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Customize
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Customize Dashboard</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="logo">Company Logo</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="flex-1"
+                      />
+                      {companyLogo && (
+                        <div className="w-12 h-12 border rounded overflow-hidden">
+                          <img
+                            src={companyLogo}
+                            alt="Logo Preview"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Company Title</Label>
+                    <Input
+                      id="title"
+                      placeholder={companyTitle}
+                      defaultValue={companyTitle}
+                      onChange={(e) => setTempTitle(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button onClick={saveCustomization}>Save Changes</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Calls</p>
+                  <h3 className="text-2xl font-bold mt-1 text-gray-900">{executions.length}</h3>
+                </div>
+                <Phone className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Average Duration</p>
+                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                    {formatDuration(
+                      executions.reduce((acc, curr) => acc + curr.conversation_duration, 0) / 
+                      executions.length
+                    )}
+                  </h3>
+                </div>
+                <Clock className="h-8 w-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Cost</p>
+                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                    {formatCost(
+                      executions.reduce((acc, curr) => acc + curr.total_cost, 0) / 100
+                    )}
+                  </h3>
+                </div>
+                <DollarSign className="h-8 w-8 text-emerald-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Success Rate</p>
+                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                    {Math.round(
+                      (executions.filter(e => e.status === 'completed').length / executions.length) * 100
+                    )}%
+                  </h3>
+                </div>
+                <Activity className="h-8 w-8 text-amber-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Table */}
+        <Card className="overflow-hidden border-gray-200 bg-white shadow-sm">
+          <CardHeader className="bg-gray-50 border-b border-gray-200">
+            <CardTitle className="text-xl font-semibold text-gray-900">Recent Executions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Execution ID</TableHead>
-                  <TableHead>Customer Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Cost</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentExecutions.map((execution) => (
-                  <TableRow key={execution.id}>
-                    <TableCell className="font-mono text-sm">
-                      {execution.id.substring(0, 8)}...
-                    </TableCell>
-                    <TableCell>
-                      {(execution.telephony_data?.call_type == "outbound"
-                        ? execution.telephony_data?.to_number
-                        : execution.telephony_data?.from_number) || "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      {execution.telephony_data?.call_type || "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      {formatDuration(execution.conversation_duration)}
-                    </TableCell>
-                    <TableCell>{formatDate(execution.created_at)}</TableCell>
-                    <TableCell>
-                      {formatCost(execution.total_cost / 100)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={getStatusColor(execution.status)}
-                      >
-                        {execution.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {execution.telephony_data?.recording_url && (
-                          <button
-                            className="text-blue-500 hover:text-blue-700"
-                            onClick={() => handleRecordingClick(execution)}
-                          >
-                            Recording
-                          </button>
-                        )}
-                        {execution.transcript && (
-                          <button
-                            className="text-green-500 hover:text-green-700"
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-gray-50 border-b border-gray-200">
+                    <TableHead className="text-gray-600 font-medium">Execution ID</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Customer Number</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Type</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Duration</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Timestamp</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Cost</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Status</TableHead>
+                    <TableHead className="text-gray-600 font-medium">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentExecutions.map((execution) => (
+                    <TableRow 
+                      key={execution.id}
+                      className="hover:bg-gray-50 transition-colors border-b border-gray-200"
+                    >
+                      <TableCell className="font-medium text-gray-900">{execution.id}</TableCell>
+                      <TableCell className="text-gray-700">{execution.telephony_data?.call_type || "N/A"}</TableCell>
+                      <TableCell className="text-gray-700">{formatDuration(execution.conversation_duration)}</TableCell>
+                      <TableCell className="text-gray-700">{formatDate(execution.created_at)}</TableCell>
+                      <TableCell className="text-gray-700">{formatCost(execution.total_cost / 100)}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={`${getStatusColor(execution.status)} text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm`}
+                        >
+                          {execution.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleTranscriptClick(execution)}
+                            className="hover:bg-blue-50 text-blue-600"
                           >
                             Transcript
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-500">
-                Showing {startIndex + 1} to{" "}
-                {Math.min(endIndex, executions.length)} of {executions.length}{" "}
-                entries
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRecordingClick(execution)}
+                            className="hover:bg-purple-50 text-purple-600"
+                          >
+                            Recording
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1} to {endIndex} of {executions.length} entries
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Sidebar component */}
+      {/* Sidebar */}
       {selectedExecution && selectedAction && (
         <Sidebar
-          isOpen={Boolean(selectedExecution)}
+          isOpen={true}
           execution={selectedExecution}
           action={selectedAction}
           onClose={closeSidebar}
