@@ -1,6 +1,6 @@
 "use client";
 
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Fira_Mono } from "next/font/google";
 import Link from "next/link";
 import {
   ClerkProvider,
@@ -15,14 +15,17 @@ import { Brain, Menu } from "lucide-react";
 import "./globals.css";
 import { useState } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const firaMono = Fira_Mono({
+  variable: "--font-fira-mono",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "700"],
 });
 
 export default function RootLayout({
@@ -35,7 +38,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-900`}
+          className={`${inter.variable} ${firaMono.variable} font-sans antialiased bg-slate-900`}
         >
           {/* Show only UserButton for logged-in users, full navbar for guests */}
           <SignedIn>
