@@ -258,34 +258,34 @@ export default function ExecutionsDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             {companyLogo && (
-              <img src={companyLogo} alt="Company Logo" className="h-12 w-12 rounded-lg object-cover ring-2 ring-gray-200" />
+              <img src={companyLogo} alt="Company Logo" className="h-12 w-12 rounded-lg object-cover ring-2 ring-blue-700/40 bg-slate-800" />
             )}
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-blue-100">
               {companyTitle}
             </h1>
           </div>
           <div className="flex items-center space-x-4">
             <Button
               onClick={exportToCSV}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-sm"
+              className="bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-sm"
             >
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="border-gray-200 text-gray-600 hover:bg-gray-50">
+                <Button variant="outline" className="border-blue-700/40 text-blue-200 hover:bg-blue-900/30">
                   <Settings className="mr-2 h-4 w-4" />
                   Customize
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-slate-900 text-blue-100 border-blue-700/40">
                 <DialogHeader>
                   <DialogTitle>Customize Dashboard</DialogTitle>
                 </DialogHeader>
@@ -298,10 +298,10 @@ export default function ExecutionsDashboard() {
                         type="file"
                         accept="image/*"
                         onChange={handleLogoChange}
-                        className="flex-1"
+                        className="flex-1 bg-slate-800 text-blue-100 border-blue-700/40"
                       />
                       {companyLogo && (
-                        <div className="w-12 h-12 border rounded overflow-hidden">
+                        <div className="w-12 h-12 border rounded overflow-hidden bg-slate-800 border-blue-700/40">
                           <img
                             src={companyLogo}
                             alt="Logo Preview"
@@ -318,12 +318,13 @@ export default function ExecutionsDashboard() {
                       placeholder={companyTitle}
                       defaultValue={companyTitle}
                       onChange={(e) => setTempTitle(e.target.value)}
+                      className="bg-slate-800 text-blue-100 border-blue-700/40"
                     />
                   </div>
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button onClick={saveCustomization}>Save Changes</Button>
+                    <Button onClick={saveCustomization} className="bg-gradient-to-r from-blue-600 to-teal-500 text-white">Save Changes</Button>
                   </DialogClose>
                 </DialogFooter>
               </DialogContent>
@@ -333,96 +334,96 @@ export default function ExecutionsDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+          <Card className="bg-slate-800/80 border-blue-700/40 hover:shadow-lg transition-all duration-300 text-blue-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Calls</p>
-                  <h3 className="text-2xl font-bold mt-1 text-gray-900">{executions.length}</h3>
+                  <p className="text-sm font-medium text-blue-300">Total Calls</p>
+                  <h3 className="text-2xl font-bold mt-1 text-blue-100">{executions.length}</h3>
                 </div>
-                <Phone className="h-8 w-8 text-blue-500" />
+                <Phone className="h-8 w-8 text-blue-400" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+          <Card className="bg-slate-800/80 border-blue-700/40 hover:shadow-lg transition-all duration-300 text-blue-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Average Duration</p>
-                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                  <p className="text-sm font-medium text-blue-300">Average Duration</p>
+                  <h3 className="text-2xl font-bold mt-1 text-blue-100">
                     {formatDuration(
                       executions.reduce((acc, curr) => acc + curr.conversation_duration, 0) / 
                       executions.length
                     )}
                   </h3>
                 </div>
-                <Clock className="h-8 w-8 text-purple-500" />
+                <Clock className="h-8 w-8 text-purple-400" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+          <Card className="bg-slate-800/80 border-blue-700/40 hover:shadow-lg transition-all duration-300 text-blue-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Cost</p>
-                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                  <p className="text-sm font-medium text-blue-300">Total Cost</p>
+                  <h3 className="text-2xl font-bold mt-1 text-blue-100">
                     {formatCost(
                       executions.reduce((acc, curr) => acc + curr.total_cost, 0) / 100
                     )}
                   </h3>
                 </div>
-                <DollarSign className="h-8 w-8 text-emerald-500" />
+                <DollarSign className="h-8 w-8 text-emerald-400" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
+          <Card className="bg-slate-800/80 border-blue-700/40 hover:shadow-lg transition-all duration-300 text-blue-100">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Success Rate</p>
-                  <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                  <p className="text-sm font-medium text-blue-300">Success Rate</p>
+                  <h3 className="text-2xl font-bold mt-1 text-blue-100">
                     {Math.round(
                       (executions.filter(e => e.status === 'completed').length / executions.length) * 100
                     )}%
                   </h3>
                 </div>
-                <Activity className="h-8 w-8 text-amber-500" />
+                <Activity className="h-8 w-8 text-amber-400" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Table */}
-        <Card className="overflow-hidden border-gray-200 bg-white shadow-sm">
-          <CardHeader className="bg-gray-50 border-b border-gray-200">
-            <CardTitle className="text-xl font-semibold text-gray-900">Recent Executions</CardTitle>
+        <Card className="overflow-hidden border-blue-700/40 bg-slate-900/80 shadow-lg">
+          <CardHeader className="bg-slate-800/80 border-b border-blue-700/40">
+            <CardTitle className="text-xl font-semibold text-blue-100">Recent Executions</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-gray-50 border-b border-gray-200">
-                    <TableHead className="text-gray-600 font-medium">Execution ID</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Customer Number</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Type</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Duration</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Timestamp</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Cost</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Status</TableHead>
-                    <TableHead className="text-gray-600 font-medium">Actions</TableHead>
+                  <TableRow className="hover:bg-slate-800/60 border-b border-blue-700/40">
+                    <TableHead className="text-blue-300 font-medium">Execution ID</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Customer Number</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Type</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Duration</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Timestamp</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Cost</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Status</TableHead>
+                    <TableHead className="text-blue-300 font-medium">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {currentExecutions.map((execution) => (
                     <TableRow 
                       key={execution.id}
-                      className="hover:bg-gray-50 transition-colors border-b border-gray-200"
+                      className="hover:bg-slate-800/60 transition-colors border-b border-blue-700/40"
                     >
-                      <TableCell className="font-medium text-gray-900">{execution.id}</TableCell>
-                      <TableCell className="text-gray-700">{execution.telephony_data?.call_type || "N/A"}</TableCell>
-                      <TableCell className="text-gray-700">{formatDuration(execution.conversation_duration)}</TableCell>
-                      <TableCell className="text-gray-700">{formatDate(execution.created_at)}</TableCell>
-                      <TableCell className="text-gray-700">{formatCost(execution.total_cost / 100)}</TableCell>
+                      <TableCell className="font-medium text-blue-100">{execution.id}</TableCell>
+                      <TableCell className="text-blue-200">{execution.telephony_data?.call_type || "N/A"}</TableCell>
+                      <TableCell className="text-blue-200">{formatDuration(execution.conversation_duration)}</TableCell>
+                      <TableCell className="text-blue-200">{formatDate(execution.created_at)}</TableCell>
+                      <TableCell className="text-blue-200">{formatCost(execution.total_cost / 100)}</TableCell>
                       <TableCell>
                         <Badge 
                           className={`${getStatusColor(execution.status)} text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm`}
@@ -436,7 +437,7 @@ export default function ExecutionsDashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleTranscriptClick(execution)}
-                            className="hover:bg-blue-50 text-blue-600"
+                            className="hover:bg-blue-500/10 text-blue-400"
                           >
                             Transcript
                           </Button>
@@ -444,7 +445,7 @@ export default function ExecutionsDashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRecordingClick(execution)}
-                            className="hover:bg-purple-50 text-purple-600"
+                            className="hover:bg-purple-500/10 text-purple-400"
                           >
                             Recording
                           </Button>
@@ -460,7 +461,7 @@ export default function ExecutionsDashboard() {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-blue-300">
             Showing {startIndex + 1} to {endIndex} of {executions.length} entries
           </div>
           <div className="flex space-x-2">
@@ -468,7 +469,7 @@ export default function ExecutionsDashboard() {
               variant="outline"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+              className="border-blue-700/40 text-blue-200 hover:bg-blue-900/30"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -476,7 +477,7 @@ export default function ExecutionsDashboard() {
               variant="outline"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+              className="border-blue-700/40 text-blue-200 hover:bg-blue-900/30"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
