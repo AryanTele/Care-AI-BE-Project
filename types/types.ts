@@ -50,3 +50,15 @@ export interface Execution {
   context_details: ContextDetails;
   batch_run_details: unknown | null;
 }
+
+export interface Agent {
+  id: string;
+  agent_name: string;
+  agent_welcome_message: string;
+  created_at: string;
+  updated_at: string;
+  status: "active" | "inactive";
+  model: string;
+  voice_id: string;
+  language: string;
+}

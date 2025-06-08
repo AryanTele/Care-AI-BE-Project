@@ -19,7 +19,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import type { Execution } from "@/types/types";
+import type { Execution, Agent } from "@/types/types";
 import {
   Dialog,
   DialogContent,
@@ -39,15 +39,23 @@ import {
   DollarSign, 
   Activity 
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
 const ITEMS_PER_PAGE = 10;
 
 type SidebarAction = "transcript" | "recording";
 
 export default function ExecutionsDashboard() {
   const [executions, setExecutions] = useState<Execution[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,43 +82,114 @@ export default function ExecutionsDashboard() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentExecutions = executions.slice(startIndex, endIndex);
 
+  // New state for agent loading and error
+  const [agentLoading, setAgentLoading] = useState<boolean>(false);
+  const [agentError, setAgentError] = useState<string | null>(null);
+
+  const [usdToInr, setUsdToInr] = useState<number>(85.79); // fallback
+  const [rateUpdatedAt, setRateUpdatedAt] = useState<string>("");
+
   useEffect(() => {
     // Load saved customization from localStorage
     const savedLogo = localStorage.getItem("dashboardLogo");
     const savedTitle = localStorage.getItem("dashboardTitle");
+    const savedAgentId = localStorage.getItem("selectedAgentId");
 
     if (savedLogo) setCompanyLogo(savedLogo);
     if (savedTitle) setCompanyTitle(savedTitle);
+    if (savedAgentId) setSelectedAgentId(savedAgentId);
 
-    const fetchExecutions = async () => {
-      const options = {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-        },
-      };
-
+    const fetchAgents = async () => {
+      setAgentLoading(true);
+      setAgentError(null);
       try {
-        const response = await fetch(
-          `https://api.bolna.dev/agent/${AGENT_ID}/executions`,
-          options
-        );
-
+        const response = await fetch("https://api.bolna.dev/v2/agent/all", {
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+          },
+        });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data: Execution[] = await response.json();
-        setExecutions(data);
+        const data: Agent[] = await response.json();
+        setAgents(data);
+        if (savedAgentId && data.some(agent => agent.id === savedAgentId)) {
+          setSelectedAgentId(savedAgentId);
+        } else if (data.length > 0) {
+          setSelectedAgentId(data[0].id);
+          localStorage.setItem("selectedAgentId", data[0].id);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setAgentError(err instanceof Error ? err.message : "Failed to fetch agents");
       } finally {
-        setLoading(false);
+        setAgentLoading(false);
       }
     };
-
-    fetchExecutions();
+    fetchAgents();
   }, []);
+
+  useEffect(() => {
+    if (selectedAgentId) {
+      fetchExecutions();
+    }
+  }, [selectedAgentId]);
+
+  useEffect(() => {
+    // Fetch USD to INR rate dynamically
+    const fetchRate = async () => {
+      try {
+        const res = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=INR");
+        const data = await res.json();
+        if (data && data.rates && data.rates.INR) {
+          setUsdToInr(data.rates.INR);
+          setRateUpdatedAt(new Date(data.date).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
+        }
+      } catch (err) {
+        // fallback to default
+        setUsdToInr(85.79);
+        setRateUpdatedAt("");
+      }
+    };
+    fetchRate();
+  }, []);
+
+  const fetchExecutions = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.bolna.dev/agent/${selectedAgentId}/executions`,
+        {
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: Execution[] = await response.json();
+      setExecutions(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAgentChange = (agentId: string) => {
+    setAgentLoading(true);
+    setAgentError(null);
+    setSelectedAgentId(agentId);
+    localStorage.setItem("selectedAgentId", agentId);
+    setCurrentPage(1);
+    // Simulate a short delay for UX (optional, can be removed)
+    setTimeout(() => {
+      setAgentLoading(false);
+    }, 400);
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -137,15 +216,18 @@ export default function ExecutionsDashboard() {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
+  const formatIST = (dateString: string): string => {
+    const date = new Date(dateString);
+    // Add 5 hours 30 minutes (19800000 ms)
+    const istDate = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+    return istDate.toLocaleString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
     });
   };
 
@@ -155,7 +237,8 @@ export default function ExecutionsDashboard() {
 
   const formatCost = (cost: number | string): string => {
     const parsedCost = typeof cost === "string" ? parseFloat(cost) : cost;
-    return `$${parsedCost.toFixed(3)}`;
+    const inr = parsedCost * usdToInr;
+    return `₹${inr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const getStatusColor = (status: Execution["status"]): string => {
@@ -217,9 +300,10 @@ export default function ExecutionsDashboard() {
 
     const csvData = executions.map((execution) => [
       execution.id,
+      execution.context_details?.recipient_phone_number || "N/A",
       execution.telephony_data?.call_type || "N/A",
       formatDuration(execution.conversation_duration),
-      formatDate(execution.created_at),
+      formatIST(execution.created_at),
       formatCost(execution.total_cost / 100),
       execution.status,
     ]);
@@ -241,10 +325,10 @@ export default function ExecutionsDashboard() {
     document.body.removeChild(link);
   };
 
-  if (loading) {
+  if (loading && !selectedAgentId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
       </div>
     );
   }
@@ -271,6 +355,29 @@ export default function ExecutionsDashboard() {
             </h1>
           </div>
           <div className="flex items-center space-x-4">
+            <div className="w-64">
+              <Select value={selectedAgentId} onValueChange={handleAgentChange}>
+                <SelectTrigger className="bg-slate-800 text-blue-100 border-blue-700/40">
+                  <SelectValue placeholder="Select an agent" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 text-blue-100 border-blue-700/40">
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.agent_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {agentLoading && (
+                <div className="flex items-center mt-2 text-blue-400">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Loading agents...
+                </div>
+              )}
+              {agentError && (
+                <div className="mt-2 text-red-400 text-sm">{agentError}</div>
+              )}
+            </div>
             <Button
               onClick={exportToCSV}
               className="bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-sm"
@@ -393,6 +500,14 @@ export default function ExecutionsDashboard() {
           </Card>
         </div>
 
+        {/* Exchange Rate Note */}
+        <div className="text-xs text-blue-300 mt-2">
+          USD to INR rate: <span className="font-semibold">{usdToInr}</span>
+          {rateUpdatedAt && (
+            <span> (Last updated: {rateUpdatedAt})</span>
+          )}
+        </div>
+
         {/* Main Table */}
         <Card className="overflow-hidden border-blue-700/40 bg-slate-900/80 shadow-lg">
           <CardHeader className="bg-slate-800/80 border-b border-blue-700/40">
@@ -420,9 +535,10 @@ export default function ExecutionsDashboard() {
                       className="hover:bg-slate-800/60 transition-colors border-b border-blue-700/40"
                     >
                       <TableCell className="font-medium text-blue-100">{execution.id}</TableCell>
+                      <TableCell className="text-blue-200">{execution.context_details?.recipient_phone_number || "N/A"}</TableCell>
                       <TableCell className="text-blue-200">{execution.telephony_data?.call_type || "N/A"}</TableCell>
                       <TableCell className="text-blue-200">{formatDuration(execution.conversation_duration)}</TableCell>
-                      <TableCell className="text-blue-200">{formatDate(execution.created_at)}</TableCell>
+                      <TableCell className="text-blue-200">{formatIST(execution.created_at)}</TableCell>
                       <TableCell className="text-blue-200">{formatCost(execution.total_cost / 100)}</TableCell>
                       <TableCell>
                         <Badge 
