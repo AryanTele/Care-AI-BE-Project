@@ -2,9 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Phone, Brain, BarChart, ArrowRight, Sparkles, Zap, Shield, Globe } from "lucide-react";
+import { CheckCircle, Brain, ArrowRight, Sparkles, Zap, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -389,7 +388,7 @@ function TestimonialCard({
       whileHover={{ y: -5 }}
       className="bg-slate-800/50 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all duration-300"
     >
-      <div className="mb-4 text-4xl text-blue-400">"</div>
+      <div className="mb-4 text-4xl text-blue-400">&quot;</div>
       <p className="text-blue-200 mb-6 text-lg">{quote}</p>
       <div className="flex items-center">
         <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center text-white font-bold">

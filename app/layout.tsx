@@ -10,7 +10,6 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-import { motion } from "framer-motion";
 import { Brain, Menu } from "lucide-react";
 import "./globals.css";
 import { useState } from "react";

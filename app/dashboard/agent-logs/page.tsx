@@ -29,9 +29,9 @@ const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
 interface AgentLog {
   id: string;
   timestamp: string;
-  level: "info" | "warning" | "error";
+  level: string;
   message: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 const formatIST = (dateString: string): string => {
@@ -52,7 +52,6 @@ const formatIST = (dateString: string): string => {
 export default function AgentLogs() {
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -74,9 +73,8 @@ export default function AgentLogs() {
 
       const data = await response.json();
       setLogs(data);
-      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error fetching logs:", err);
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 // import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,12 +16,11 @@ const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
 export default function OutboundCall() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [callSummary, setCallSummary] = useState<any | null>(null);
+  const [callSummary, setCallSummary] = useState<Record<string, unknown> | null>(null);
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
 
   // Poll for call status if we have an execution_id
   useEffect(() => {
@@ -47,6 +45,7 @@ export default function OutboundCall() {
         } catch (err) {
           setError("Failed to fetch call status");
           setStatusLoading(false);
+          console.log(err);
         }
       }, 2000);
       return () => clearInterval(pollingRef.current!);
@@ -210,10 +209,10 @@ export default function OutboundCall() {
                 <CardContent>
                   <div className="flex flex-col gap-2 text-blue-200">
                     <div>
-                      <span className="font-semibold">To:</span> {callSummary.recipient_phone_number}
+                      <span className="font-semibold">To:</span> {String(callSummary.recipient_phone_number)}
                     </div>
                     <div>
-                      <span className="font-semibold">Execution ID:</span> {callSummary.execution_id}
+                      <span className="font-semibold">Execution ID:</span> {String(callSummary.execution_id)}
                     </div>
                     <div>
                       <span className="font-semibold">Status:</span> {getStatusBadge(callStatus)}
@@ -221,14 +220,14 @@ export default function OutboundCall() {
                         <RefreshCw className="w-4 h-4 ml-2 animate-spin inline-block text-blue-400" />
                       )}
                     </div>
-                    {callSummary.agent_id && (
+                    {Boolean(callSummary.agent_id) && (
                       <div>
-                        <span className="font-semibold">Agent ID:</span> {callSummary.agent_id}
+                        <span className="font-semibold">Agent ID:</span> {String(callSummary.agent_id)}
                       </div>
                     )}
-                    {callSummary.from_number && (
+                    {Boolean(callSummary.from_number) && (
                       <div>
-                        <span className="font-semibold">From:</span> {callSummary.from_number}
+                        <span className="font-semibold">From:</span> {String(callSummary.from_number)}
                       </div>
                     )}
                   </div>

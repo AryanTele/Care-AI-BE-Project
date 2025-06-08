@@ -31,9 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
 import { 
-  BarChart3, 
   Phone, 
   Clock, 
   DollarSign, 
@@ -46,6 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Image from "next/image";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 const ITEMS_PER_PAGE = 10;
@@ -146,6 +145,7 @@ export default function ExecutionsDashboard() {
         }
       } catch (err) {
         // fallback to default
+        console.log(err);
         setUsdToInr(85.79);
         setRateUpdatedAt("");
       }
@@ -348,7 +348,7 @@ export default function ExecutionsDashboard() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             {companyLogo && (
-              <img src={companyLogo} alt="Company Logo" className="h-12 w-12 rounded-lg object-cover ring-2 ring-blue-700/40 bg-slate-800" />
+              <Image src={companyLogo} alt="Company Logo" width={48} height={48} className="h-12 w-12 rounded-lg object-cover ring-2 ring-blue-700/40 bg-slate-800" />
             )}
             <h1 className="text-3xl font-bold text-blue-100">
               {companyTitle}
@@ -409,9 +409,11 @@ export default function ExecutionsDashboard() {
                       />
                       {companyLogo && (
                         <div className="w-12 h-12 border rounded overflow-hidden bg-slate-800 border-blue-700/40">
-                          <img
+                          <Image
                             src={companyLogo}
                             alt="Logo Preview"
+                            width={48}
+                            height={48}
                             className="w-full h-full object-contain"
                           />
                         </div>

@@ -10,6 +10,18 @@ const Navbar = () => {
         >
           Agent Logs
         </Link>
+        <Link
+          href="/features"
+          className="px-4 py-2 rounded-lg hover:bg-blue-700/20 transition-colors"
+        >
+          Features
+        </Link>
+        <Link
+          href="/pricing"
+          className="px-4 py-2 rounded-lg hover:bg-blue-700/20 transition-colors"
+        >
+          Pricing
+        </Link>
       </div>
     </div>
   )
