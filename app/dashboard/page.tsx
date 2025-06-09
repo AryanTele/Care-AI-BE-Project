@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -88,6 +88,38 @@ export default function ExecutionsDashboard() {
   const [usdToInr, setUsdToInr] = useState<number>(85.79); // fallback
   const [rateUpdatedAt, setRateUpdatedAt] = useState<string>("");
 
+  const fetchExecutions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.bolna.dev/agent/${selectedAgentId}/executions`,
+        {
+          headers: {
+            Authorization: `Bearer ${API_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: Execution[] = await response.json();
+      setExecutions(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedAgentId, API_KEY]);
+
+  useEffect(() => {
+    if (selectedAgentId) {
+      fetchExecutions();
+    }
+  }, [selectedAgentId, fetchExecutions]);
+
   useEffect(() => {
     // Load saved customization from localStorage
     const savedLogo = localStorage.getItem("dashboardLogo");
@@ -128,12 +160,6 @@ export default function ExecutionsDashboard() {
   }, []);
 
   useEffect(() => {
-    if (selectedAgentId) {
-      fetchExecutions();
-    }
-  }, [selectedAgentId]);
-
-  useEffect(() => {
     // Fetch USD to INR rate dynamically
     const fetchRate = async () => {
       try {
@@ -152,32 +178,6 @@ export default function ExecutionsDashboard() {
     };
     fetchRate();
   }, []);
-
-  const fetchExecutions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `https://api.bolna.dev/agent/${selectedAgentId}/executions`,
-        {
-          headers: {
-            Authorization: `Bearer ${API_KEY}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: Execution[] = await response.json();
-      setExecutions(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAgentChange = (agentId: string) => {
     setAgentLoading(true);

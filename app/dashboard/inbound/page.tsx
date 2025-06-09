@@ -12,15 +12,25 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Phone, Users, MessageSquare } from "lucide-react";
+
 import type { PhoneNumber, Agent } from "@/types/phone-number";
 
-const API_KEY = "bn-85cf021afcd443609883bf8a37a72fef";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+
+// Extend PhoneNumber type to include inbound_agent
+interface PhoneNumberWithAgent extends PhoneNumber {
+  inbound_agent?: {
+    agent_name: string;
+    model?: string;
+  };
+}
 
 export default function InboundCallsDashboard() {
-  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
+  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumberWithAgent[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [inboundAgent, setInboundAgent] = useState<Agent | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,7 +48,7 @@ export default function InboundCallsDashboard() {
           options
         );
         if (!phoneResponse.ok) throw new Error("Failed to fetch phone numbers");
-        const phoneData: PhoneNumber[] = await phoneResponse.json();
+        const phoneData: PhoneNumberWithAgent[] = await phoneResponse.json();
         setPhoneNumbers(phoneData);
 
         // Fetch agents
@@ -49,6 +59,9 @@ export default function InboundCallsDashboard() {
         if (!agentResponse.ok) throw new Error("Failed to fetch agents");
         const agentData: Agent[] = await agentResponse.json();
         setAgents(agentData);
+        // Set current inbound/outbound agent from localStorage if available
+        const inboundId = localStorage.getItem("inboundAgentId");
+        setInboundAgent(agentData.find((a: Agent) => a.id === inboundId) || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -77,6 +90,24 @@ export default function InboundCallsDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto p-8 space-y-10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+      {/* Inbound/Outbound Agent Controls */}
+      <div className="flex flex-col md:flex-row gap-8 items-center mb-10">
+        <div className="bg-slate-900/80 border border-blue-700/30 rounded-2xl shadow-xl p-8 flex flex-col items-center w-80">
+          <h2 className="text-xl font-bold text-blue-100 mb-2">Inbound Agent</h2>
+          <div className="mb-4 text-blue-200">
+            {inboundAgent ? (
+              <>
+                <div className="font-semibold text-blue-100">{inboundAgent.agent_name}</div>
+                {"model" in inboundAgent && (
+                  <div className="text-sm text-blue-300">{(inboundAgent as unknown as { model?: string }).model || "-"}</div>
+                )}
+              </>
+            ) : (
+              <span className="text-blue-400">No agent set</span>
+            )}
+          </div>
+        </div>
+      </div>
       {/* Active Numbers Section */}
       <Card className="bg-slate-900/80 border border-blue-500/30 shadow-xl text-blue-100 rounded-xl">
         <CardHeader className="border-b border-blue-500/30 bg-slate-900/90 rounded-t-xl px-6 pt-6 pb-4">
@@ -95,6 +126,7 @@ export default function InboundCallsDashboard() {
                 <TableHead className="text-blue-300 font-medium">Renewal Date</TableHead>
                 <TableHead className="text-blue-300 font-medium">Status</TableHead>
                 <TableHead className="text-blue-300 font-medium">Last Updated</TableHead>
+                <TableHead className="text-blue-300 font-medium">Inbound Agent</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -117,6 +149,18 @@ export default function InboundCallsDashboard() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-blue-200">{number.humanized_updated_at}</TableCell>
+                  <TableCell>
+                    {number.inbound_agent ? (
+                      <>
+                        <div className="font-semibold text-blue-100">{number.inbound_agent.agent_name}</div>
+                        {"model" in number.inbound_agent && (
+                          <div className="text-sm text-blue-300">{(number.inbound_agent as unknown as { model?: string }).model || "-"}</div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-blue-400">No agent assigned</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

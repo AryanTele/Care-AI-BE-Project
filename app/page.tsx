@@ -1,12 +1,99 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Brain, ArrowRight, Sparkles, Zap, Shield } from "lucide-react";
+import { CheckCircle, Brain, ArrowRight, Sparkles, Zap, Shield, Loader2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+
+interface Agent {
+  id: string;
+  agent_name: string;
+  agent_welcome_message: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  model: string;
+  voice_id: string;
+  language: string;
+}
 
 export default function Home() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [inboundAgent, setInboundAgent] = useState<Agent | null>(null);
+  const [outboundAgent, setOutboundAgent] = useState<Agent | null>(null);
+  const [selecting, setSelecting] = useState<"inbound" | "outbound" | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
+  const [setting, setSetting] = useState(false);
+  const [feedback, setFeedback] = useState<string>("");
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      setLoadingAgents(true);
+      try {
+        const res = await fetch("https://api.bolna.dev/v2/agent/all", {
+          headers: { Authorization: `Bearer ${API_KEY}` },
+        });
+        const data = await res.json();
+        setAgents(data);
+        // Optionally, fetch current inbound/outbound agent from your backend or localStorage
+        const inboundId = localStorage.getItem("inboundAgentId");
+        const outboundId = localStorage.getItem("outboundAgentId");
+        setInboundAgent(data.find((a: Agent) => a.id === inboundId) || null);
+        setOutboundAgent(data.find((a: Agent) => a.id === outboundId) || null);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to fetch agents");
+      } finally {
+        setLoadingAgents(false);
+      }
+    };
+    fetchAgents();
+  }, []);
+
+  const handleSetAgent = async (type: "inbound" | "outbound") => {
+    setSetting(true);
+    setFeedback("");
+    setError("");
+    try {
+      // Example endpoint: POST /phone-numbers/set-inbound-agent or /phone-numbers/set-outbound-agent
+      // You may need to adjust the endpoint and payload as per Bolna docs
+      const endpoint = type === "inbound"
+        ? "https://api.bolna.dev/phone-numbers/set-inbound-agent"
+        : "https://api.bolna.dev/phone-numbers/set-outbound-agent";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ agent_id: selectedAgentId }),
+      });
+      if (!res.ok) throw new Error("Failed to set agent");
+      const agent = agents.find(a => a.id === selectedAgentId) || null;
+      if (type === "inbound") {
+        setInboundAgent(agent);
+        localStorage.setItem("inboundAgentId", selectedAgentId);
+      } else {
+        setOutboundAgent(agent);
+        localStorage.setItem("outboundAgentId", selectedAgentId);
+      }
+      setFeedback("Agent set successfully!");
+    } catch (err) {
+      console.log(err);
+      setError("Failed to set agent");
+    } finally {
+      setSetting(false);
+      setSelecting(null);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Hero Section */}
@@ -279,6 +366,117 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      <div className="flex flex-col md:flex-row gap-8 items-center mt-20">
+        <div className="bg-slate-900/80 border border-blue-700/30 rounded-2xl shadow-xl p-8 flex flex-col items-center w-80">
+          <h2 className="text-xl font-bold text-blue-100 mb-2">Inbound Agent</h2>
+          <div className="mb-4 text-blue-200">
+            {inboundAgent ? (
+              <>
+                <div className="font-semibold text-blue-100">{inboundAgent.agent_name}</div>
+                <div className="text-sm text-blue-300">{inboundAgent.model}</div>
+              </>
+            ) : (
+              <span className="text-blue-400">No agent set</span>
+            )}
+          </div>
+          <Dialog open={selecting === "inbound"} onOpenChange={open => setSelecting(open ? "inbound" : null)}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-teal-500 text-white w-full">Set Inbound Agent</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-slate-900 border-blue-700/40">
+              <DialogHeader>
+                <DialogTitle>Select Inbound Agent</DialogTitle>
+              </DialogHeader>
+              {loadingAgents ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                </div>
+              ) : (
+                <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+                  <SelectTrigger className="bg-slate-800 text-blue-100 border-blue-700/40">
+                    <SelectValue placeholder="Choose an agent" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 text-blue-100 border-blue-700/40">
+                    {agents.map(agent => (
+                      <SelectItem key={agent.id} value={agent.id}>{agent.agent_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <DialogFooter className="mt-4">
+                <Button
+                  onClick={() => handleSetAgent("inbound")}
+                  disabled={setting || !selectedAgentId}
+                  className="bg-gradient-to-r from-blue-600 to-teal-500 text-white"
+                >
+                  {setting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Set Agent
+                </Button>
+                <DialogClose asChild>
+                  <Button variant="outline" className="border-blue-700/40 text-blue-200">Cancel</Button>
+                </DialogClose>
+              </DialogFooter>
+              {feedback && <div className="text-green-400 mt-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {feedback}</div>}
+              {error && <div className="text-red-400 mt-2 flex items-center gap-2"><XCircle className="w-4 h-4" /> {error}</div>}
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div className="bg-slate-900/80 border border-blue-700/30 rounded-2xl shadow-xl p-8 flex flex-col items-center w-80">
+          <h2 className="text-xl font-bold text-blue-100 mb-2">Outbound Agent</h2>
+          <div className="mb-4 text-blue-200">
+            {outboundAgent ? (
+              <>
+                <div className="font-semibold text-blue-100">{outboundAgent.agent_name}</div>
+                <div className="text-sm text-blue-300">{outboundAgent.model}</div>
+              </>
+            ) : (
+              <span className="text-blue-400">No agent set</span>
+            )}
+          </div>
+          <Dialog open={selecting === "outbound"} onOpenChange={open => setSelecting(open ? "outbound" : null)}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-teal-500 text-white w-full">Set Outbound Agent</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-slate-900 border-blue-700/40">
+              <DialogHeader>
+                <DialogTitle>Select Outbound Agent</DialogTitle>
+              </DialogHeader>
+              {loadingAgents ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                </div>
+              ) : (
+                <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+                  <SelectTrigger className="bg-slate-800 text-blue-100 border-blue-700/40">
+                    <SelectValue placeholder="Choose an agent" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 text-blue-100 border-blue-700/40">
+                    {agents.map(agent => (
+                      <SelectItem key={agent.id} value={agent.id}>{agent.agent_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <DialogFooter className="mt-4">
+                <Button
+                  onClick={() => handleSetAgent("outbound")}
+                  disabled={setting || !selectedAgentId}
+                  className="bg-gradient-to-r from-blue-600 to-teal-500 text-white"
+                >
+                  {setting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Set Agent
+                </Button>
+                <DialogClose asChild>
+                  <Button variant="outline" className="border-blue-700/40 text-blue-200">Cancel</Button>
+                </DialogClose>
+              </DialogFooter>
+              {feedback && <div className="text-green-400 mt-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {feedback}</div>}
+              {error && <div className="text-red-400 mt-2 flex items-center gap-2"><XCircle className="w-4 h-4" /> {error}</div>}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { Heart, Globe, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 const team = [
   {
@@ -73,9 +74,11 @@ export default function AboutPage() {
             className="flex flex-col items-center bg-slate-900/80 border border-blue-700/30 shadow-xl rounded-2xl backdrop-blur-md p-6 hover:scale-105 hover:shadow-blue-700/20 transition-transform duration-300 group"
           >
             <div className="relative mb-4">
-              <img
+              <Image
                 src={member.avatar}
                 alt={member.name}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full border-4 border-blue-700/30 object-cover bg-slate-800 shadow-lg group-hover:scale-110 transition-transform duration-300"
                 style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)' }}
               />

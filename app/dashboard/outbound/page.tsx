@@ -9,9 +9,9 @@ import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, PhoneCall, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Agent } from "@/types/types";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-const AGENT_ID = process.env.NEXT_PUBLIC_AGENT_ID;
 
 export default function OutboundCall() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -20,7 +20,26 @@ export default function OutboundCall() {
   const [callStatus, setCallStatus] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch agents on mount
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const res = await fetch("https://api.bolna.dev/v2/agent/all", {
+          headers: { Authorization: `Bearer ${API_KEY}` },
+        });
+        const data = await res.json();
+        setAgents(data);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to fetch agents");
+      }
+    };
+    fetchAgents();
+  }, []);
 
   // Poll for call status if we have an execution_id
   useEffect(() => {
@@ -66,7 +85,7 @@ export default function OutboundCall() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        agent_id: AGENT_ID,
+        agent_id: selectedAgentId,
         recipient_phone_number: phoneNumber,
         from_number: "+19876543007",
         user_data: {
@@ -156,6 +175,22 @@ export default function OutboundCall() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
+                <Label htmlFor="agent" className="text-blue-200">Select Agent</Label>
+                <select
+                  id="agent"
+                  value={selectedAgentId}
+                  onChange={e => setSelectedAgentId(e.target.value)}
+                  className="w-full mt-1 p-2 rounded-lg bg-slate-800/80 border border-blue-700/30 text-blue-100 focus:ring-2 focus:ring-blue-600"
+                  required
+                  disabled={isLoading}
+                >
+                  <option value="" disabled>Select an agent</option>
+                  {agents.map(agent => (
+                    <option key={agent.id} value={agent.id}>{agent.agent_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <Label htmlFor="phoneNumber" className="text-blue-200">
                   Recipient Phone Number
                 </Label>
@@ -172,7 +207,7 @@ export default function OutboundCall() {
               </div>
               <Button
                 type="submit"
-                disabled={isLoading || !phoneNumber}
+                disabled={isLoading || !phoneNumber || !selectedAgentId}
                 className="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white shadow-md"
               >
                 {isLoading ? (
@@ -209,7 +244,7 @@ export default function OutboundCall() {
                 <CardContent>
                   <div className="flex flex-col gap-2 text-blue-200">
                     <div>
-                      <span className="font-semibold">To:</span> {String(callSummary.recipient_phone_number)}
+                      <span className="font-semibold">To:</span> {String(callSummary.recipient_phone_number ?? phoneNumber)}
                     </div>
                     <div>
                       <span className="font-semibold">Execution ID:</span> {String(callSummary.execution_id)}
